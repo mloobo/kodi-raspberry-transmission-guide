@@ -4,9 +4,9 @@
 2. Hardware needed
 3. Software needed
 4. First steps
-  4.1 Preamble
-  4.2 Create trakt.tv account and configure
-  4.3 (Optional) Create SHOWRSS account and configure
+  1. Preamble
+  2. Create trakt.tv account and configure
+  3. (Optional) Create SHOWRSS account and configure
 5. Create directory structure
 6. Install and configure Transmission
 7. Install and configure Kodi
