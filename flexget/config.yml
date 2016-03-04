@@ -1,0 +1,101 @@
+at /home/pi/Downloads/flexget/config.yml
+    templates:
+      tvshows:
+        exists_series:
+          - /home/pi/Videos/series/
+          - /home/pi/Downloads/incomplete
+        regexp:
+          reject:
+            - FASTSUB
+            - VOSTFR
+            - Subtitulado
+        content_filter:
+          reject:
+            - '*.rar'
+            - '*.zip'
+            - '*.avi'  
+        transmission:
+          host: localhost
+          port: 9091
+          username: YOUR_TRANSMISSION_USER
+          password: 'YOUR_TRANSMISSION_PASSWD'
+          path: /home/pi/Videos/series/{{series_name|pathscrub}}/S{{"%02d"|format(series_season)}}  
+        inputs:
+          - rss: http://showrss.info/user/YOUR_SHOWRSS_USER_ID.rss?magnets=true&namespaces=true&name=null&quality=hd&re=null
+      movies:
+        transmission:
+          host: localhost
+          port: 9091
+          username: YOUR_TRANSMISSION_USER
+          password: 'YOUR_TRANSMISSION_PASSWD'
+          path: /home/pi/Videos/peliculas
+        regexp:
+            reject:
+                - german
+                - sweden
+                - italian
+                - hindi
+     
+    tasks:
+      get_tvshowshd:
+        priority: 1
+        template: tvshows
+        configure_series:
+          from:
+            trakt_list:
+              username: YOUR_TRAKT_USERNAME
+              list: Following in HD
+              type: shows
+              account: YOUR_TRAKT_USERNAME
+          settings:
+            quality: 720p hdtv
+     
+      get_tvshows:
+        priority: 2
+        template: tvshows
+        configure_series:
+          from:
+            trakt_list:
+              username: YOUR_TRAKT_USERNAME
+              list: Following
+              type: shows
+              account: YOUR_TRAKT_USERNAME
+          settings:
+            quality: hdtv
+
+      fill_movie_queue:
+        priority: 3
+        trakt_list:
+          username: YOUR_TRAKT_USERNAME
+          type: movies
+          list: watchlist
+          account: YOUR_TRAKT_USERNAME
+        seen: local
+        accept_all: yes
+        movie_queue:
+           action: add
+           quality: 720p-1080p
+ 
+      get_movies:
+        template: movies
+        priority: 4
+        content_size:
+          max: 80000
+          min: 800
+        discover:
+          what:
+            - emit_movie_queue: yes
+          from:
+            - kat:
+                category: movies
+                verified: yes
+            - torrentz: good
+ 
+      cleanup:
+        priority: 6
+        clean_transmission:
+          host: localhost
+          port: 9091
+          username: YOUR_TRANSMISSION_USER
+          password: 'YOUR_TRANSMISSION_PASSWD'
+          finished_for: 7 days
