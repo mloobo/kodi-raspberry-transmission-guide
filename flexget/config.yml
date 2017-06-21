@@ -1,4 +1,3 @@
-at /home/pi/Downloads/flexget/config.yml
     templates:
       tvshows:
         exists_series:
@@ -22,7 +21,7 @@ at /home/pi/Downloads/flexget/config.yml
           path: /home/pi/Videos/series/{{series_name|pathscrub}}/S{{"%02d"|format(series_season)}}  
         inputs:
           - rss: http://showrss.info/user/YOUR_SHOWRSS_USER_ID.rss?magnets=true&namespaces=true&name=null&quality=hd&re=null
-      movies:
+      movies_template:
         transmission:
           host: localhost
           port: 9091
@@ -37,6 +36,41 @@ at /home/pi/Downloads/flexget/config.yml
                 - hindi
      
     tasks:
+      watchlist:
+        priority: 1
+        trakt_list:  # You can also use imdb_list
+          account: YOUR_TRAKT_USERNAME
+          list: watchlist
+          type: movies
+        accept_all: yes
+        seen: local  # We don't want accepted movies on this feed to affect actual download feed
+        list_add:
+          - movie_list: watchlist  # you can call this whatever you want
+
+    # task that automatically downloads movies from the movie_list
+      movies search:
+        trakt_lookup: yes  # can also use imdb_lookup or tmdb_lookup
+        priority: 10 # run after the movie queue fill task
+        discover:
+          what:
+            - movie_list: watchlist
+          from:
+            - piratebay: yes
+            - rarbg:
+                category: x264 1080p
+          interval: 1 days
+        torrent_alive: 10 # Will reject results with less than 10 seeds
+        quality: 1080p # Make sure no screeners or cams are downloaded
+        list_match:
+          from:
+            - movie_list: watchlist
+        transmission:
+          host: localhost
+          port: 9091
+          username: YOUR_TRANSMISSION_USER
+          password: 'YOUR_TRANSMISSION_PASSWD'
+          path: /home/pi/Videos/peliculas
+
       get_tvshowshd:
         priority: 1
         template: tvshows
@@ -72,24 +106,7 @@ at /home/pi/Downloads/flexget/config.yml
           account: YOUR_TRAKT_USERNAME
         seen: local
         accept_all: yes
-        movie_queue:
-           action: add
-           quality: 720p-1080p
- 
-      get_movies:
-        template: movies
-        priority: 4
-        content_size:
-          max: 80000
-          min: 800
-        discover:
-          what:
-            - emit_movie_queue: yes
-          from:
-            - kat:
-                category: movies
-                verified: yes
-            - torrentz: good
+        movie_list: movies from trakt
  
       cleanup:
         priority: 6
